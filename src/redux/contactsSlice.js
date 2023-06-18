@@ -1,41 +1,61 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { nanoid } from 'nanoid';
+import { fetchContacts, addContact, deleteContact } from './contactsOperations';
 
-const contactsInitialState = [
-  { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-  { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-  { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-  { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-];
+const contactsInitialState = {
+  items: [],
+  isLoading: false,
+  error: null,
+};
+
+const handlePending = state => {
+  state.isLoading = true;
+};
+
+const handleRejected = (state, action) => {
+  state.isLoading = false;
+  state.error = action.payload;
+};
 
 const contactsSlice = createSlice({
   // Ім'я слайсу
   name: 'contacts',
   // Початковий стан редюсера слайсу
   initialState: contactsInitialState,
-  // Об'єкт редюсерів
-  reducers: {
-    addContact: {
-      reducer: (state, action) => {
-        state.push(action.payload);
-        //  state = [...state, action.payload]; - бібліотека Immer перепише іммутабельно
-      },
-      prepare: ({ name, number }) => {
-        const id = nanoid();
-        return { payload: { id, name, number } };
-      },
-    },
+  // Об'єкт внутрішніх редюсерів - відсутні
+  // reducers: { ...},
+  // Зовнішні редюсери з білдером
+  extraReducers: bilder => {
+    bilder
+      .addCase(fetchContacts.pending, handlePending)
+      .addCase(fetchContacts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+        state.items = action.payload;
+      })
+      .addCase(fetchContacts.rejected, handleRejected)
 
-    deleteContact: (state, action) => {
-      const id = action.payload;
-      // видаляємо елемент з масиву по id
-      return state.filter(contact => contact.id !== id);
-      // return state.filter(contact => contact.id !== action.payload);
-    },
+      .addCase(addContact.pending, handlePending)
+      .addCase(addContact.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+        state.items.push(action.payload);
+      })
+      .addCase(addContact.rejected, handleRejected)
+
+      .addCase(deleteContact.pending, handlePending)
+      .addCase(deleteContact.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+        const index = state.items.findIndex(
+          task => task.id === action.payload.id
+        );
+        state.items.splice(index, 1);
+      })
+      .addCase(deleteContact.rejected, handleRejected);
   },
 });
 
-// Генератори екшенів
-export const { addContact, deleteContact } = contactsSlice.actions;
-// Редюсер слайсу
+// Експорт генераторів екшенів не потрібен - внутрішні екшени відсутні
+// ...
+// Експорт редюсера слайсу
 export const contactsReducer = contactsSlice.reducer;

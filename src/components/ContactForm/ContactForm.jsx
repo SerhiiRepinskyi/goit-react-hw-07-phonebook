@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectItems } from '../../redux/selectors';
+import { addContact } from '../../redux/contactsOperations';
 import { toast } from 'react-toastify';
 import { Form, FormLabel, FormInput, FormBtn } from './ContactForm.styled';
 
-import { useDispatch, useSelector } from 'react-redux';
-import { selectorContacts } from '../../redux/selectors';
-import { addContact } from '../../redux/contactsSlice';
-
 const ContactForm = () => {
   const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
+  const [phone, setPhone] = useState('');
+
   const dispatch = useDispatch(); // Хук для відправлення action
-  const contacts = useSelector(selectorContacts); // Отримуємо всі контакти зі стейта Store
+  const contacts = useSelector(selectItems); // Отримуємо всі контакти зі стейта Store
 
   // Відповідає за оновлення стану (контрольований інпут)
   const handleInputChange = evt => {
@@ -20,7 +20,7 @@ const ContactForm = () => {
         setName(value);
         break;
       case 'number':
-        setNumber(value);
+        setPhone(value);
         break;
       default:
         break;
@@ -30,28 +30,25 @@ const ContactForm = () => {
   // Викликається під час відправлення форми
   const handleSubmit = evt => {
     evt.preventDefault();
-
     const isAdded = contacts.find(
       contact => contact.name.toLowerCase() === name.toLowerCase()
     );
     if (isAdded) {
       return toast.error(`${name} is already in contacts.`);
     }
-
     // Відправлення action addContact
     dispatch(
       addContact({
         name,
-        number,
+        phone,
       })
     );
-
     resetForm(); // Очистка форми
   };
 
   const resetForm = () => {
     setName('');
-    setNumber('');
+    setPhone('');
   };
 
   return (
@@ -77,7 +74,7 @@ const ContactForm = () => {
           pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
           title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
           required
-          value={number}
+          value={phone}
           onChange={handleInputChange}
         />
       </FormLabel>
@@ -85,6 +82,6 @@ const ContactForm = () => {
       <FormBtn type="submit">Add contact</FormBtn>
     </Form>
   );
-}
+};
 
 export default ContactForm;

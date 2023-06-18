@@ -1,9 +1,12 @@
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
+import { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchContacts } from '../redux/contactsOperations';
+import { selectItems, selectIsLoading, selectError } from '../redux/selectors';
 import ContactForm from './ContactForm';
 import ContactList from './ContactList';
 import Filter from './Filter';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
   Container,
   Title,
@@ -13,11 +16,15 @@ import {
   Message,
 } from './App.styled';
 
-import { useSelector } from 'react-redux';
-import { selectorContacts } from '../redux/selectors';
-
 export default function App() {
-  const contacts = useSelector(selectorContacts); // Отримуємо всі контакти зі стейта Store
+  const dispatch = useDispatch();
+  const contacts = useSelector(selectItems); // Отримуємо всі контакти зі стейта Store
+  const error = useSelector(selectError);
+  const isLoading = useSelector(selectIsLoading);
+
+  useEffect(() => {
+    dispatch(fetchContacts());
+  }, [dispatch]);
 
   return (
     <Container>
@@ -30,9 +37,12 @@ export default function App() {
         <ContactsNum>{contacts.length}</ContactsNum>
       </AmountContacts>
 
+      {isLoading && !error && <b>Request in progress...</b>}
+      {error && error}
+
       {contacts.length > 0 ? (
         <>
-          <Filter  />
+          <Filter />
           <ContactList />
         </>
       ) : (
